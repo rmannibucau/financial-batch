@@ -2,6 +2,7 @@ package com.supertribe.sample.financial.batch;
 
 import org.apache.openejb.junit.ApplicationComposer;
 import org.apache.openejb.testing.Classes;
+import org.apache.openejb.testing.ContainerProperties;
 import org.apache.openejb.testing.Default;
 import org.apache.openejb.testing.Descriptor;
 import org.apache.openejb.testing.Descriptors;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 @Default
 @Classes(cdi = true)
 @Descriptors(@Descriptor(name = "persistence.xml", path = "META-INF/persistence.xml"))
+@ContainerProperties(@ContainerProperties.Property(name = "Default JDBC Database.LogSql", value = "true")) // debug in logs
 @RunWith(ApplicationComposer.class)
 public class BatchTest {
     @PersistenceContext

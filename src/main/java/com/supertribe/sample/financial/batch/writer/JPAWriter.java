@@ -1,6 +1,6 @@
 package com.supertribe.sample.financial.batch.writer;
 
-import com.supertribe.sample.financial.batch.writer.domain.JpaInstrument;
+import com.supertribe.sample.financial.batch.writer.entity.JpaInstrument;
 import org.apache.batchee.extras.typed.NoStateTypedItemWriter;
 
 import java.util.List;
@@ -15,8 +15,6 @@ public class JPAWriter extends NoStateTypedItemWriter<JpaInstrument> {
 
     @Override
     protected void doWriteItems(final List<JpaInstrument> list) {
-        for (final JpaInstrument instrument : list) {
-            em.persist(instrument);
-        }
+        list.stream().forEach(em::persist);
     }
 }
