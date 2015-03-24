@@ -31,6 +31,11 @@
       <version>2.1.0</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.batchee</groupId>
+      <artifactId>batchee-modelmapper</artifactId>
+      <version>${batchee.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.modelmapper</groupId>
       <artifactId>modelmapper</artifactId>
       <version>0.7.4</version>

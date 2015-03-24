@@ -16,7 +16,12 @@
           <property name="skippedHeaderLines" value="5"/>
         </properties>
       </reader>
-      <processor ref="business" />
+      <processor ref="org.apache.batchee.modelmapper.ModelMapperItemProcessor">
+        <properties>
+          <property name="matchingStrategy" value="LOOSE" />
+          <property name="destinationType" value="com.supertribe.sample.financial.batch.writer.entity.JpaInstrument" />
+        </properties>
+      </processor>
       <writer ref="jpa" />
     </chunk>
   </step>
