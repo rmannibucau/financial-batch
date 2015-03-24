@@ -8,7 +8,14 @@
 
   <step id="process">
     <chunk>
-      <reader ref="file" />
+      <reader ref="org.apache.batchee.beanio.BeanIOReader">
+        <properties>
+          <property name="file" value="#{jobParameters['input']}"/>
+          <property name="streamName" value="readerCSV"/>
+          <property name="configuration" value="beanio.xml"/>
+          <property name="skippedHeaderLines" value="5"/>
+        </properties>
+      </reader>
       <processor ref="business" />
       <writer ref="jpa" />
     </chunk>

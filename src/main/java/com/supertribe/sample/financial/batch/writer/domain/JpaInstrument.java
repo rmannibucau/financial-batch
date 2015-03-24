@@ -1,9 +1,11 @@
-package com.supertribe.sample.financial.batch.writer.jpa;
+package com.supertribe.sample.financial.batch.writer.domain;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 @Entity
-public class PersistentQuote {
+public class JpaInstrument {
+    @Id
     private String id;
 
     public String getId() {

@@ -1,19 +1,22 @@
 package com.supertribe.sample.financial.batch.writer;
 
+import com.supertribe.sample.financial.batch.writer.domain.JpaInstrument;
+import org.apache.batchee.extras.typed.NoStateTypedItemWriter;
+
 import java.util.List;
-import javax.batch.api.chunk.AbstractItemWriter;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-// TODO
 @Named("jpa")
-public class JPAWriter extends AbstractItemWriter {
+public class JPAWriter extends NoStateTypedItemWriter<JpaInstrument> {
     @PersistenceContext
     private EntityManager em;
 
     @Override
-    public void writeItems(final List<Object> items) throws Exception {
-
+    protected void doWriteItems(final List<JpaInstrument> list) {
+        for (final JpaInstrument instrument : list) {
+            em.persist(instrument);
+        }
     }
 }

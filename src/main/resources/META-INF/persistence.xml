@@ -8,7 +8,7 @@
   <persistence-unit name="financial">
     <jta-data-source>jdbc/financial</jta-data-source>
     <non-jta-data-source>jdbc/financialNonJta</non-jta-data-source>
-    <class>com.supertribe.sample.financial.batch.writer.jpa.PersistentQuote</class>
+    <class>com.supertribe.sample.financial.batch.writer.domain.JpaInstrument</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
