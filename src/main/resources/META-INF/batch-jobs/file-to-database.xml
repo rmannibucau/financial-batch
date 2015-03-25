@@ -6,11 +6,19 @@
       http://xmlns.jcp.org/xml/ns/javaee
       http://xmlns.jcp.org/xml/ns/javaee/jobXML_1_0.xsd">
 
+  <step id="download" next="process">
+    <batchlet ref="download">
+      <properties>
+        <property name="inputURL" value="#{jobParameters['inputURL']}" />
+        <property name="output" value="#{jobParameters['downloadCache']}" />
+      </properties>
+    </batchlet>
+  </step>
   <step id="process">
     <chunk>
       <reader ref="org.apache.batchee.beanio.BeanIOReader">
         <properties>
-          <property name="file" value="#{jobParameters['input']}"/>
+          <property name="file" value="#{jobParameters['downloadCache']}"/>
           <property name="streamName" value="readerCSV"/>
           <property name="configuration" value="beanio.xml"/>
           <property name="skippedHeaderLines" value="5"/>

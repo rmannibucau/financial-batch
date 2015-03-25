@@ -1,7 +1,5 @@
 package com.supertribe.sample.financial.batch.writer.entity;
 
-import org.beanio.annotation.Field;
-
 import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
