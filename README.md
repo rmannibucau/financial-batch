@@ -17,7 +17,7 @@
 
     # optional but for debugging (see sql statements)
     export BATCHEE_OPTS="-Djdbc.LogSql=true -Djdbc=new://Resource?type=DataSource"
-    ./bin/batchee start -lifecycle openejb -archive financial-batch-1.0-SNAPSHOT.war -name file-to-database input=inputData.csv
+    ./bin/batchee start -lifecycle openejb -archive financial-batch-1.0-SNAPSHOT.war -name file-to-database inputURL=file:/data/inputData.csv downloadCache=/tmp/cache.csv
 
 
 ## Note
