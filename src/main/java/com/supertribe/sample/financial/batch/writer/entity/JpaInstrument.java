@@ -4,11 +4,13 @@ import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
 
 import static javax.persistence.TemporalType.DATE;
 
 @Entity
+@NamedQuery(name = "JpaInstrument.findAll", query = "select i from JpaInstrument i")
 public class JpaInstrument {
     @EmbeddedId
     private Id id;
