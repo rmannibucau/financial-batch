@@ -23,6 +23,9 @@ public class DownloadFile extends AbstractBatchlet {
     public String process() throws Exception { // stupid impl but enough for us
         validate();
         final File out = new File(output);
+        if (out.isFile()) { // don't re-download if already here
+            return output;
+        }
         FileUtils.forceMkdir(out.getParentFile());
         FileUtils.copyURLToFile(new URL(inputURL), out);
         return output;

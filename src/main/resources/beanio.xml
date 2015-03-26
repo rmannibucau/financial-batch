@@ -4,10 +4,13 @@
         xsi:schemaLocation="
           http://www.beanio.org/2012/03
           http://www.beanio.org/2012/03/mapping.xsd">
+
   <stream name="readerCSV" format="csv">
     <parser>
       <property name="delimiter" value=";" />
     </parser>
+
+    <typeHandler name="cddp" class="com.supertribe.sample.financial.batch.reader.beanio.CommaDecimalDoubleParser" />
     <record name="instrument" class="com.supertribe.sample.financial.batch.reader.beanio.CsvInstrument" />
   </stream>
 </beanio>

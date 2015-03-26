@@ -2,6 +2,7 @@ package com.supertribe.sample.financial.batch;
 
 import org.apache.batchee.test.StepLauncher;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.openejb.junit.ApplicationComposer;
 import org.apache.openejb.testing.Classes;
 import org.apache.openejb.testing.ContainerProperties;
@@ -16,6 +17,7 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import javax.annotation.Resource;
 import javax.batch.runtime.Metric;
 import javax.batch.runtime.StepExecution;

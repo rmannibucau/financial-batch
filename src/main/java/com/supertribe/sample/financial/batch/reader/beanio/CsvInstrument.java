@@ -40,7 +40,7 @@ public class CsvInstrument {
     @Field(at = 78)
     private String unitOfQuotation;
 
-    @Field(at = 82)
+    @Field(at = 82, handlerName = "cddp")
     private double closingPricePreviousDay;
 
     @Field(at = 95)

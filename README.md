@@ -17,9 +17,12 @@
 
     # optional but for debugging (see sql statements)
     export BATCHEE_OPTS="-Djdbc.LogSql=true -Djdbc=new://Resource?type=DataSource"
-    ./bin/batchee start -lifecycle openejb -archive financial-batch-1.0-SNAPSHOT.war -name file-to-database inputURL=file:/data/inputData.csv downloadCache=/tmp/cache.csv
+    ./bin/batchee start -lifecycle openejb -archive financial-batch-1.0-SNAPSHOT.war \
+        -name file-to-database \
+        inputURL=http://www.xetra.com/blob/1424940/cdbb8e95489e25f891f537f70375fb04/data/allTradableInstruments.csv \
+        downloadCache=/tmp/cache.csv
 
 
 ## Note
 
-Data source: http://xetra.com/xetra-en/allTradableInstruments.csv
+Data source: http://www.xetra.com/blob/1424940/cdbb8e95489e25f891f537f70375fb04/data/allTradableInstruments.csv

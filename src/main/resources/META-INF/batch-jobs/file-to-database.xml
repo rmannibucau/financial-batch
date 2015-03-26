@@ -14,7 +14,7 @@
       </properties>
     </batchlet>
   </step>
-  <step id="process">
+  <step id="process" next="clean">
     <chunk>
       <reader ref="org.apache.batchee.beanio.BeanIOReader">
         <properties>
@@ -32,6 +32,20 @@
       </processor>
       <writer ref="jpa" />
     </chunk>
+  </step>
+  <step id="clean" next="report">
+    <batchlet ref="clean">
+      <properties>
+        <property name="path" value="#{jobParameters['downloadCache']}" />
+      </properties>
+    </batchlet>
+  </step>
+  <step id="report">
+    <batchlet ref="report">
+      <properties>
+        <property name="stepIndex" value="1" />
+      </properties>
+    </batchlet>
   </step>
 
 </job>
