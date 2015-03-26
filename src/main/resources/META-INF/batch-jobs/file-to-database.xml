@@ -14,7 +14,7 @@
       </properties>
     </batchlet>
   </step>
-  <step id="process" next="clean">
+  <step id="process" next="db-report">
     <chunk>
       <reader ref="org.apache.batchee.beanio.BeanIOReader">
         <properties>
@@ -30,8 +30,18 @@
           <property name="destinationType" value="com.supertribe.sample.financial.batch.writer.entity.JpaInstrument" />
         </properties>
       </processor>
-      <writer ref="jpa" />
+      <writer ref="jpa">
+          <properties>
+            <property name="propagateStatus" value="true" />
+          </properties>
+      </writer>
     </chunk>
+  </step>
+  <step id="db-report" next="release-memory">
+    <batchlet ref="jpaReport" />
+  </step>
+  <step id="release-memory" next="clean"> <!-- let in-memory map be garbaged collected -->
+    <batchlet ref="cleanTransientData" />
   </step>
   <step id="clean" next="report">
     <batchlet ref="clean">

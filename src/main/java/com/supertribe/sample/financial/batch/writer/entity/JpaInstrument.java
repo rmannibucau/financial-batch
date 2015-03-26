@@ -125,6 +125,13 @@ public class JpaInstrument {
         this.tradingCalendar = tradingCalendar;
     }
 
+    @Override
+    public String toString() {
+        return "JpaInstrument{" +
+                "id=" + id +
+                '}';
+    }
+
     @Embeddable
     public static class Id {
         private String isin;
@@ -173,6 +180,15 @@ public class JpaInstrument {
             result = 31 * result + mic.hashCode();
             result = 31 * result + currency.hashCode();
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Id{" +
+                    "isin='" + isin + '\'' +
+                    ", mic='" + mic + '\'' +
+                    ", currency='" + currency + '\'' +
+                    '}';
         }
     }
 }
