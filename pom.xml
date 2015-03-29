@@ -110,7 +110,7 @@
           </execution>
         </executions>
         <configuration>
-          <includes>com/supertribe/sample/financial/batch/writer/domain/*.class</includes>
+          <includes>com/supertribe/sample/financial/batch/writer/entity/*.class</includes>
         </configuration>
         <dependencies>
           <dependency>
