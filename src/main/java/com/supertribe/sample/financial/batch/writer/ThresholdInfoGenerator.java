@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Named
-public class ThresholdComparator extends NoStateTypedItemWriter<JpaInstrument> {
+public class ThresholdInfoGenerator extends NoStateTypedItemWriter<JpaInstrument> {
     @PersistenceContext
     private EntityManager em;
 
@@ -29,12 +29,12 @@ public class ThresholdComparator extends NoStateTypedItemWriter<JpaInstrument> {
 
     private Set<JpaInstrument.Id> all;
 
-    private AtomicInteger counter = new AtomicInteger(0);
+    private AtomicInteger beansAlreadyPresent = new AtomicInteger(0);
 
     @PostConstruct
     private void cacheDb() { // supposes the batch is the only one to write for its execution duration, acceptable for reference db
         // avoid em.getReference(JpaInstrument.class, instrument.getId()); in doWriteItems and N db hits
-        List<JpaInstrument.Id> list = em.createQuery("Select i.id from JpaInstrument i", JpaInstrument.Id.class).getResultList();
+        List<JpaInstrument.Id> list = em.createNamedQuery("JpaInstrument.findAll.Pk", JpaInstrument.Id.class).getResultList();
         all = new HashSet<>(list);
     }
 
@@ -43,8 +43,11 @@ public class ThresholdComparator extends NoStateTypedItemWriter<JpaInstrument> {
 
         for (JpaInstrument i : list) {
             if (all.contains(i.getId())) {
-                counter.incrementAndGet();
+                beansAlreadyPresent.incrementAndGet();
             }
         }
+        ThresholdInfo thresholdInfo = new ThresholdInfo(beansAlreadyPresent.get(), all.size());
+        context.setTransientUserData(thresholdInfo);
     }
+
 }

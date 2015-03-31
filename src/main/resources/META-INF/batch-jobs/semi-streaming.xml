@@ -16,8 +16,14 @@
       </properties>
     </batchlet>
   </step>
-
-  <step id="pre-process" next="release-memory">
+  <step id="pre-process" next="process">
+    <listeners>
+      <listener ref="thresholdVerifierListener">
+        <properties>
+          <property name="maxThreshold" value="20.0" />
+        </properties>
+      </listener>
+    </listeners>
     <chunk>
       <reader ref="org.apache.batchee.beanio.BeanIOReader">
         <properties>
@@ -33,14 +39,40 @@
           <property name="destinationType" value="com.supertribe.sample.financial.batch.writer.entity.JpaInstrument" />
         </properties>
       </processor>
-      <writer ref="thresholdComparator">
+      <writer ref="thresholdInfoGenerator">
+        <properties>
+          <property name="propagateStatus" value="true" />
+        </properties>
+      </writer>
+    </chunk>
+    <fail on="safetyThresholdExceeded" />
+  </step>
+  <step id="process" next="db-report">
+    <chunk>
+      <reader ref="org.apache.batchee.beanio.BeanIOReader">
+        <properties>
+          <property name="file" value="#{jobParameters['downloadCache']}"/>
+          <property name="streamName" value="readerCSV"/>
+          <property name="configuration" value="beanio.xml"/>
+          <property name="skippedHeaderLines" value="5"/>
+        </properties>
+      </reader>
+      <processor ref="org.apache.batchee.modelmapper.ModelMapperItemProcessor">
+        <properties>
+          <property name="matchingStrategy" value="LOOSE" />
+          <property name="destinationType" value="com.supertribe.sample.financial.batch.writer.entity.JpaInstrument" />
+        </properties>
+      </processor>
+      <writer ref="jpa">
         <properties>
           <property name="propagateStatus" value="true" />
         </properties>
       </writer>
     </chunk>
   </step>
-
+  <step id="db-report" next="release-memory">
+    <batchlet ref="jpaReport" />
+  </step>
   <step id="release-memory" next="clean"> <!-- let in-memory map be garbaged collected -->
     <batchlet ref="cleanTransientData" />
   </step>
