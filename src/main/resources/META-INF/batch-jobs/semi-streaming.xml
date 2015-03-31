@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job id="file-to-datase" version="1.0"
+     xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="
+      http://xmlns.jcp.org/xml/ns/javaee
+      http://xmlns.jcp.org/xml/ns/javaee/jobXML_1_0.xsd">
+
+  <!-- Option 2 -  streaming with custom algo to ensure we don't commit anything before having met the requirement (can create a big first chunk) -->
+
+  <step id="download" next="pre-process">
+    <batchlet ref="download">
+      <properties>
+        <property name="inputURL" value="#{jobParameters['inputURL']}" />
+        <property name="output" value="#{jobParameters['downloadCache']}" />
+      </properties>
+    </batchlet>
+  </step>
+
+  <step id="pre-process" next="release-memory">
+    <chunk>
+      <reader ref="org.apache.batchee.beanio.BeanIOReader">
+        <properties>
+          <property name="file" value="#{jobParameters['downloadCache']}"/>
+          <property name="streamName" value="readerCSV"/>
+          <property name="configuration" value="beanio.xml"/>
+          <property name="skippedHeaderLines" value="5"/>
+        </properties>
+      </reader>
+      <processor ref="org.apache.batchee.modelmapper.ModelMapperItemProcessor">
+        <properties>
+          <property name="matchingStrategy" value="LOOSE" />
+          <property name="destinationType" value="com.supertribe.sample.financial.batch.writer.entity.JpaInstrument" />
+        </properties>
+      </processor>
+      <writer ref="thresholdComparator">
+        <properties>
+          <property name="propagateStatus" value="true" />
+        </properties>
+      </writer>
+    </chunk>
+  </step>
+
+  <step id="release-memory" next="clean"> <!-- let in-memory map be garbaged collected -->
+    <batchlet ref="cleanTransientData" />
+  </step>
+  <step id="clean" next="report">
+    <batchlet ref="clean">
+      <properties>
+        <property name="path" value="#{jobParameters['downloadCache']}" />
+      </properties>
+    </batchlet>
+  </step>
+  <step id="report">
+    <batchlet ref="report">
+      <properties>
+        <property name="stepIndex" value="1" />
+      </properties>
+    </batchlet>
+  </step>
+
+</job>

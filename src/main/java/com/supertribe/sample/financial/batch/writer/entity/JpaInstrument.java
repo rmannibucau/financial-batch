@@ -1,16 +1,15 @@
 package com.supertribe.sample.financial.batch.writer.entity;
 
 import java.util.Date;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.NamedQuery;
-import javax.persistence.Temporal;
+import javax.persistence.*;
 
 import static javax.persistence.TemporalType.DATE;
 
 @Entity
-@NamedQuery(name = "JpaInstrument.findAll", query = "select i from JpaInstrument i")
+@NamedQueries({
+        @NamedQuery(name = "JpaInstrument.findAll", query = "select i from JpaInstrument i"),
+        @NamedQuery(name = "JpaInstrument.findAll.Pk", query = "Select i.id from JpaInstrument i")
+})
 public class JpaInstrument {
     @EmbeddedId
     private Id id;
