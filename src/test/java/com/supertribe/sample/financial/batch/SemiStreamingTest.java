@@ -1,34 +1,29 @@
 package com.supertribe.sample.financial.batch;
 
 import com.supertribe.sample.financial.batch.writer.entity.JpaInstrument;
+import org.apache.batchee.test.StepBuilder;
 import org.apache.batchee.test.StepLauncher;
-import org.apache.commons.io.FileUtils;
 import org.apache.openejb.junit.ApplicationComposer;
 import org.apache.openejb.testing.*;
 import org.apache.openejb.testng.PropertiesBuilder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.annotation.Resource;
-import javax.batch.runtime.Metric;
+import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.StepExecution;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.UserTransaction;
 import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toMap;
 import static javax.batch.runtime.BatchStatus.COMPLETED;
+import static javax.batch.runtime.BatchStatus.FAILED;
 import static org.apache.batchee.test.StepBuilder.extractFromXml;
 import static org.apache.openejb.loader.JarLocation.jarLocation;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 @Default
 @Classes(cdi = true)
@@ -84,13 +79,12 @@ public class SemiStreamingTest {
 
     @Test
     public void shouldComputeThresholdAndFailBecauseItsTooHigh() {
-        final StepExecution execution = StepLauncher.execute(
+        final JobExecution execution = StepLauncher.exec(
                 extractFromXml("semi-streaming", "pre-process"),
                 new PropertiesBuilder()
                         .p("downloadCache", INPUT_CSV.getAbsolutePath())
-                        .build());
-
-        assertEquals(COMPLETED, execution.getBatchStatus());
+                        .build()).jobExecution();
+        assertEquals(FAILED, execution.getBatchStatus());
 //        assertEquals(
 //                new HashMap<Metric.MetricType, Long>() {{
 //                    put(Metric.MetricType.READ_COUNT, 15L);
