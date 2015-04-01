@@ -1,6 +1,13 @@
 # Data Processing in Financial Services with TomEE (part 1)
 
 
+This is a joint work of Romain Manni-Buceau and Michal Kalkowski.
+
+The related project is available on github at:
+
+https://github.com/rmannibucau/financial-batch.git
+
+
 ## Overview
 The project demonstrates a typical case of maintaining a universe of entities which are taken from an external source. In this context that would be a list of securities from XETRA market, which are shared on the website as a file and updated daily. The goal of this batch is to capture these updates and make sure they are reflected in a local database. Its requirements are similar to those observed in financial services industry and use the best-in-class, cutting-edge technologies.
 
@@ -19,7 +26,7 @@ There are several ways to tackle this problem. As part of this post we have impl
 ## Proof-of-concept
 The program is run as a series of loosely-coupled steps which are listed below. The technological stack is described in more details in the next paragraph.
 
-1.	Download – download the file from remote location and store it as a cache in a defined directory. This is to prevent the file from being re-downloaded in case of failure.
+1.	Download – download the file from remote location and store it as a cache in a defined directory. This is to prevent the file from being re-downloaded in case of failure. The importance of having this step is to be able to quickly do some adjustments if necessary.
 2.	(Only in semi-streaming) Pre-process – read the input and estimate if the resulting number of deletions will exceed a given threshold.
 3.	Process – read the CSV file, transform each line into a POJO. Transform the POJO to a different domain and synchronize it with the database.
 4.	Db-repot – log in detail which instruments are new/updated/stale.
@@ -60,6 +67,13 @@ The program is written using JSR 352 (Batch Processing for Java Platform), intro
 BeanIO is an open-source framework for reading and writing POJOs from data streams, i.e. CSV/XML file. The input files in financial industries more often than not have a large number of columns, from which you need only a portion. To avoid the daunting work of defining them all in your POJO, the library allows you to state that you need fields 1 and 90. Moreover, it allows you to define your own custom type converters, i.e. BigDecimal with special rounding. Moreover it is well-integrated with JSR 352.
 
 ModelMapper is a library which aims to simplify object-to-object mapping. In the project it maps the CSV domain to JPA one. It can handle a great part of work automatically.
+
+## Advantages
+A sure advantage of this kind of programming model is the ability to easily test the units, steps and finally jobs independently. The responsibility of each component is clearly limited and its purpose gives a clear indication of its purpose, i.e. readers, processors, writers and listeners.
+
+Another strong point is the freedom of changing say input or output of the flow without impacting the whole processing logic. Moving from database to a queue requires the change of only one, clearly defined component. The maintenance of such a system is surely less costly than custom alternatives.
+
+Performance is also much easier to achieve given that you have an easy way of implementing pipelining. JSR 352 gives you a good deal of tools to process the data in chunks, making sure full-load is only done when the user clearly wants so.
 
 ## Error Handling
 There are several strategies of handling the runtime errors in a batch, and whichever you choose has to be stated upfront and communicated clearly. Errors may result from several problems – malformed data, network errors, failed business validation etc.  It is recommended to simulate how the application will behave in case of each error.
@@ -121,7 +135,7 @@ The way errors will be redelivered or mitigated is not part of this categorizati
 ----
 
 
-And now for something completely different, a failure of download. Stage at which error occured is clearly visible :
+And now for something completely different, a failure of download. Stage at which error occured is clearly visible:
 
 ----
 
