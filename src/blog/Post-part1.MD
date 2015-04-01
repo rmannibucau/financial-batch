@@ -1,7 +1,7 @@
 # Data Processing in Financial Services with TomEE (part 1)
 
 
-This is a joint work of Romain Manni-Buceau and Michal Kalkowski.
+This is a joint work of Romain Manni-Bucau and Michal Kalkowski.
 
 The related project is available on github at:
 
@@ -10,25 +10,24 @@ https://github.com/rmannibucau/financial-batch.git
 
 ## Overview
 
-The project demonstrates a typical case of maintaining a universe of entities which are taken from an external source.
-In this context that would be a list of securities from XETRA market, which are shared on the website as a file and updated daily.
-The goal of this batch is to capture these updates and make sure they are reflected in a local database.
-Its requirements are similar to those observed in financial services industry and use the best-in-class, cutting-edge technologies.
+The project demonstrates a typical case of maintaining a universe of entities; which are taken from an external source.
+In this context that would be a list of securities from XETRA market, which are shared on the website as a file and updated daily. The goal of this batch is to capture these updates and make sure they are reflected in a local database.
+Its requirements are similar to those observed in the financial services industry and uses the best-in-class, cutting-edge technologies.
 
 ## Constraints
 
 The batch should be:
 
-- Idempotent.
-- Easily restartable, preferrably from the last point of failure.
+- Idempotent
+- Easily restartable (preferrably from the last point of failure)
 
 ## Modes of operation
 
-There are several ways to tackle this problem. As part of this post we have implemented first two cases.
+There are several ways to tackle this problem. As a part of this post we have implemented the first two cases.
 
-1.	Full-streaming: most risky and most efficient for huge amount of data. In this case you have to be sure that the file will be maintained correctly and is not corrupted, i.e. the maintained data-set will not be subject to errors in processing or erroneous size fluctuations. This mode uses chunking with a given commit interval (for performances). This is implemented in the batch called "file-to-database".
-2.	2 passes streaming: pre-process the file in order to not corrupt the database if the file is corrupted. Typically that would mean stopping if processing the file would mean deleting more than X% of the rows in the current dataset. Sample implementation in file "semi-streaming" batch.
-3.	In memory comparison: load the input data to be processed, subsequently load the full, existing data set and compare the two. The comparison will allow you to make a decision about the relative difference between the two datasets in terms of number of updates, inserts and deletes. This gives you very fined grain decision variables but also enforces you to work in memory. 
+1.	Full-streaming: most risky and most efficient for huge amount of data. In this case you have to be sure that the file will be maintained correctly and is not corrupted. (i.e. the maintained dataset will not be subject to errors in processing or erroneous size fluctuations.) This mode uses chunking with a given commit interval for performances. This is implemented in the batch called "file-to-database."
+2.	Two-pass streaming: pre-process the file in order to not corrupt the database; in case the file is corrupted. If processing the file results in deleting more than X% of the rows in the current dataset, this typically would mean stopping. Sample implementation in file "semi-streaming" batch.
+3.	In-memory comparison: first load the input data to be processed, then load the full existing data set to compare the two. The comparison will allow you to make a decision about the relative difference between the two datasets in terms of number of updates, inserts and deletes. This gives you very fine-grained decision variables but also obligates you to work in-memory. 
 
 ## Proof-of-concept
 
@@ -39,34 +38,30 @@ The overall flow is described in this diagram:
 ![Flow](file-to-datase.png)
 
 1.	Download: download the file from remote location and store it as a cache in a defined directory. This is to prevent the file from being re-downloaded in case of failure. It also ensures you can investigate an error if the batch fails (can be due to incoming data).
-2.	(Only when using 2 passes) Pre-process: read the input and estimate if the resulting number of deletions will exceed a given threshold.
-3.	Process: read the CSV file, transform each line into a POJO (reader). Transform the POJO to a different domain (processor) and synchronize it with the database (writer).
-4.	Db-report: log in detail which instruments are new/updated/stale. This is only for investigation and audit purpose.
-5.	Release-memory: clean the state which is passed from the steps before. Process and Db-report steps communicate through a shared data in `JobContext`. To avoid to keep these data which can be huge in memory we reset them during this step.
+2.	Pre-process (only when using two-pass) : read the input and estimate if the resulting number of deletions will exceed a given threshold.
+3.	Process: read the CSV file, transform each line into a POJO (Reader). Transform the POJO to a different domain (Processor) and synchronize it with the database (Writer).
+4.	DB-report: log in detail which instruments are new/updated/stale. This is only for investigation and auditing purposes.
+5.	Release-memory: clean the state which is passed from the steps before. Process and DB-report steps are communicated through shared data in `JobContext`. To avoid keeping these data, which can be huge in-memory, we reset them during this step.
 6.	Clean: delete the locally cached file. Note: this is a simple algorithm, in practise we would archive it (mainly a move + renaming).
-7.	Report: log some statistics of the execution of each or some steps. This step is mainly for the demo purpose. In practise we would use BatchEE reporting GUI to be able to monitor executions.
+7.	Report: log statistics of the execution for each step or some steps. This step is mainly for the demo purposes. In practice we would use BatchEE reporting GUI to monitor executions.
 
 ## Technology Stack
 
-The program is written using JSR 352 (Batch Processing for Java Platform), introduced in Java EE 7 platform, which provides a programming model to run and manage batches.
+The program is written using JSR-352 (Batch Processing for Java Platform). It was introduced in Java EE 7 platform to provide a programming model for running and managing batches. We are using the BatchEE implementation of this standard; which is the implementation you'll find in Apache TomEE. Additionally we reused some "extra" BatchEE modules. These modules are developed at Apache by the BatchEE community but are portable; meaning you can reuse them without BatchEE (i.e. using JBeret.)
 
-We are using BatchEE implementation of the standard which is the implementation you'll find in Apache TomEE for instance.
-
-Additionally we reused some "extra" BatchEE modules. These modules are developped at Apache by BatchEE community but are portable. It means
-you can reuse them without BatchEE (using JBeret for instance).
-Here is the ones we relied on:
+Here are the ones we relied on:
 
 - `batchee-extras`: provide a set of standard API/components. We mainly use from this module the typed version of JBatch component to avoid casting our items (which breaks the code readability).
 - `batchee-beanio`: this module integrates JBatch with the excellent BeanIO library. This is the one allowing us to read our input CSV file without any line of code.
-- `batchee-modelmapper`: this module integrates JBatch with the ModelMapper library. We rely on this library to onvert our CSV DTO to our JPA entities. Thanks to ModelMapper library this is done without any difficulties thanks to its auto mapping discovery.
+- `batchee-modelmapper`: this module integrates JBatch with the ModelMapper library. We rely on this library to convert our CSV DTO to our JPA entities. Thanks to ModelMapper library (which includes auto mapping discovery) this is done without any difficulties.
 
 ### Enter into the code
 
-The most interesting step of our batch is the process one. This one is a chunk. It means it is split in 3 phases:
+The most interesting step of our batch is the process one. This one is a chunk; meaning it is split in 3 phases:
 
-- a reader responsible to stream data
-- then a processor taking reader data and "working" on them. In our case it is just a conversion/mapping.
-- and finally a writer responsible to finish the work on the processed data (persistence in our case)
+- Reader: responsible to stream data
+- Processor: taking reader data and "working" on them (in our case it is just a conversion/mapping)
+- Writer: responsible to finish the work on the processed data (persistence in our case)
 
 Our process step then looks like:
 
@@ -96,14 +91,14 @@ Our process step then looks like:
 </step>
 ````
 
-Since we reuse existing components for the reader (`BeanIOReader`) and the processor (`ModelMapperItemProcessor`)
-their references are their fully qualified names (note: in batchee you can use short names as well but it is not portable).
-Their configuration is straight forward and directly maps the underlying library configuration.
+Since we reused existing components for the Reader (`BeanIOReader`) and the Processor (`ModelMapperItemProcessor`)
+their references are their fully qualified names (note: in BatchEE you can use short names as well, but it is not portable).
+Their configuration is straight-forward and directly maps the underlying library configuration.
 
 Finally we wrote a custom writer to handle the JPA persistence of our instruments. It is named "jpa" thanks to CDI `@Named`
-qualifier. Its `propagateStatus` configuration allows to propagate in the `JobContext` the state of the entities (ie is it a new entry, was it updated, should it be deleted).
+qualifier. Its `propagateStatus` configuration allows for propagating in the `JobContext` the state of the entities (i.e. is it a new entry, was it updated, should it be deleted).
 
-Here what our writer looks like:
+Here is what our writer looks like:
 
 ```java
 @Named("jpa")
@@ -152,50 +147,44 @@ public class JPAWriter extends NoStateTypedItemWriter<JpaInstrument> {
 }
 ```
 
-Interesting thins to note about this writer are:
+Interesting things to note about this Writer are:
 
-- It is a plain CDI bean so we can get injections as in any bean
+- It is a plain CDI bean so we can get injections into any bean
 - It uses JBatch configuration thanks to `@BatchProperty` qualifier
-- it uses a query to preload in memory all the database to have a faster runtime processing. Note: if there is a natural ordering on the dataset on both sides (input and database) it can be optimized loading only the chunk data (ie loading only data for a single commit interval).
+- It uses a query to preload, in-memory, all the databases to have a faster runtime processing. Note: if there is a natural ordering on the dataset on both sides (input and database) it can be optimized by loading only the chunk data (i.e. loading only data for a single commit interval).
 - It uses `JobContext#setTransientData` to share data with next step(s)
 
 
-## Advantages
+## BatchEE Advantages
 
-A sure advantage of this kind of programming model is the ability to easily test the units, steps and finally jobs independently.
-The responsibility of each component is clearly limited and its purpose gives a clear indication of its purpose, i.e. readers, processors, writers and listeners. It really allows
-reusability (like we did with `BeanIOReader` for instance).
+A sure advantage of this kind of programming model is the ability to easily test the units, steps and jobs independently.
+The responsibility of each component is clearly limited and its purpose gives a clear indication of its purpose, (e.g. Readers, Processors, Writers and Listeners.) It really allows for reusability (like we did with `BeanIOReader`.)
 
-Another strong point is the freedom of changing say input or output of the flow without impacting the whole processing logic.
-Moving from database to a queue requires the change of only one, clearly defined component. The maintenance of such a system is surely less costly than custom alternatives.
-It also allows to restart a batch to a particular step - this is a feature of JBatch - without having to write another batch rewiring all parts of the batch.
+Another strong point is the freedom of changing input or output of the flow without impacting the whole processing logic.
+Moving from database to a queue requires the change of only one clearly defined component. The maintenance of such a system is surely less costly than custom alternatives. It also allows for a restart of a batch to a particular step without having to write another batch (rewiring all parts of the batch). This is a feature of JBatch.
 
-Performance is also much easier to achieve given that you have an easy way of implementing pipelining and chunking which is rarely well done manually.
-However JBatch doesn't prevent you to customize the commit interval algorithm which allows you to have very advanced logic here.
+Performance is also much easier to achieve given that you have an easy way of implementing pipelining and chunking. When done manually it is rarely well done. JBatch doesn't prevent you from customizing the commit interval algorithm; which allows you to have very advanced logic here.
 
-We didn't speak a lot of it too but JBatch provides you listeners for all part of the batch (Job, Step, Reader, Processor, Writer, ...). This allows you
-to audit but also customize very easily your batch without impacting the component programming model.
+It's worth mentioning that JBatch provides you listeners for all part of the batch (Job, Step, Reader, Processor, Writer, etc.) This allows you to not only audit but also very easily customize your batch without impacting the component programming model.
 
 ## Error Handling
 
-There are several strategies of handling the runtime errors in a batch, and whichever you choose, it has to be stated upfront and communicated clearly.
-Errors may result from several problems - malformed data, network errors, failed business validation etc.  It is recommended to simulate how the application will behave in case of each error.
+There are several strategies of handling the runtime errors in a batch, and whichever you choose, it has to be stated upfront and communicated clearly. Errors may result from several problems: malformed data, network errors, failed business validation, etc.  It is recommended to simulate how the application will behave in case of each error.
 
-Side note: we'll not enter into the details in this post but BatchEE provides a test module simplifying the testing of steps.
+Side note: without going into details, you should know that BatchEE provides a test module simplifying the testing of steps.
 
-1.	All or nothing: hard to achieve as it basically means you have to pass all the entities through the whole chain (including DB persistence), and rollback all in case of an error.
-2.	Best-effort: even if an error occurs, continue. This is typical if you want. In this case you just ensure the failure is visible (in BatchEE GUI for instance or sending a mail at the end of the batch).
-3.	Stop on error: once the error is spotted, the application stops with a FAILED status. This results in a potentially partially-complete execution. This type is used in the provided sample.
+1.	All or nothing: hard to achieve as it basically means you have to pass all the entities through the whole chain (including DB persistence), and rollback everything in case of an error.
+2.	Best-effort: even if an error occurs, continue. This option is available if desired. In this case you just ensure the failure is visible (in either the BatchEE GUI or by sending an email at the end of the batch.)
+3.	Stop on error: once the error is identified, the application stops with a FAILED status. This results in a potentially partially-complete execution. This type is used in the provided sample.
 
-The way errors will be redelivered or mitigated is not part of this categorization. The two main cases are:
+The way errors will be redelivered or mitigated is not a part of this categorization. The two main cases are:
 
-- auto-retry: can be done with EIP Dead Letter Channel pattern
-- human handling: ensure a human is notified and stay in fail status until it is solved (often means restarted and succeed).
+- Auto-retry: can be done with EIP Dead Letter Channel pattern
+- Human handling: ensure a human is notified and it stay in FAILED status until it is resolved (often means restarted and succeeded.)
 
 ## Sample executions
 
-Just to make things a big concrete here are a simple execution logs. It was collected using BatchEE CLI which basically allows you
-to run batches from the command line. Interesting point is it supports execution of batches from a war.
+Just to make it more concrete, here are simple execution logs. It was collected using BatchEE CLI (the ability to run batches from the command line). Interesting point is it supports execution of batches from a WAR file.
 
     $ ./bin/batchee start \
             -lifecycle openejb \
@@ -255,11 +244,10 @@ to run batches from the command line. Interesting point is it supports execution
     31-mar-2015 21:54:13.575 INFO [main] org.apache.openejb.assembler.classic.Assembler.destroyResource Closing DataSource: jdbc
 
 The first part of the logs are the container logs (deployment of the application, setup of CDI/EJB/... etc).
-Then after the BatchEE ascii logo the batch starts and we can identify the report step logging (`JPAReport`) and the step reporting (`Report`).
-Finally BatchEE report the whole job status (`COMPLETED` for this execution) before the container shutdowns.
+Then after the BatchEE ascii logo, the batch starts and we can identify the report step logging (`JPAReport`) and the step reporting (`Report`). Finally BatchEE report the whole job status as `COMPLETED` (for this execution) before the container shutdowns.
 
 
-And now for something completely different, a failure of download. Stage at which error occured is clearly visible:
+And now for something completely different, a failure of download. The stage at which error occured is clearly visible:
 
     =========================
     Batch status: FAILED
@@ -274,14 +262,14 @@ And now for something completely different, a failure of download. Stage at whic
 
 ## Conclusions
 
-This post was mainly an overview of what JBatch can do and how it can smoothly be integrated in today's financial systems.
+This post was mainly an overview of what JBatch can do and how it can be smoothly integrated in today's financial systems.
 
-However there are a lot of other features we didn't fully cover but are here and can be useful for production like:
+However there are a lot of other elements we didn't fully cover but can be useful for production:
  
-- restart of a failed batch
-- how to handle stopping of a batch gracefully
-- testing
-- webapp GUI, JAXRS API
+- Restart of a failed batch
+- How to handle stopping of a batch gracefully
+- Testing
+- Webapp GUI, JAXRS API
 - and much more...
 
 Stay tuned!
